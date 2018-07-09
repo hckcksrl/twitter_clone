@@ -1,52 +1,164 @@
-from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse
-from django.views.generic import DetailView, ListView, RedirectView, UpdateView
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from . import models , serializers
+from rest_framework import status
+from twit.tweets import models as tweet_models
+from django.db.models import Q
 
-User = get_user_model()
+class Follower(APIView):
+
+    def exist(self , user , follow_user):
+
+        try : 
+
+            user = models.User.objects.get(username = user).followers.get(username = follow_user)
+
+            return user
+
+        except models.User.DoesNotExist :
+
+            return None
+
+    def post(self , request , user_id , format=None):
+
+        user = request.user
+
+        try :
+
+            follow_user = models.User.objects.get(id = user_id)
+
+            exist_follow = self.exist(user,follow_user.username)
+
+            if exist_follow is None : 
+
+                user.followers.add(follow_user)
+
+                user.save()
+
+                return Response(status = status.HTTP_200_OK)
+
+            else :
+
+                user.followers.remove(follow_user)        
+
+                return Response(status = status.HTTP_404_NOT_FOUND)
+
+        except models.User.DoesNotExist :
+
+            return Response(status = status.HTTP_404_NOT_FOUND)
+
+    
+class Following(APIView):
+
+    def exist(self , user , follow_user):
+
+        try : 
+
+            user = models.User.objects.get(username = user).following.get(username = follow_user)
+
+            return user
+
+        except models.User.DoesNotExist :
+
+            return None
+
+    def post(self , request , user_id , format=None):
+
+        user = request.user
+
+        try :
+
+            follow_user = models.User.objects.get(id = user_id)
+
+            exist_follow = self.exist(user,follow_user.username)
+
+            if exist_follow is None : 
+
+                user.following.add(follow_user)
+
+                user.save()
+
+                return Response(status = status.HTTP_200_OK)
+
+            else :
+
+                user.following.remove(follow_user)        
+
+                return Response(status = status.HTTP_404_NOT_FOUND)
+
+        except models.User.DoesNotExist :
+
+            return Response(status = status.HTTP_404_NOT_FOUND)
+  
+
+class SmallRecommandList(APIView):
+
+    def get(self , request , format=None):
+
+        recommandlist = models.User.objects.all().order_by('date_joined')[:3]
+
+        serializer = serializers.FollowListSerializer(recommandlist, many=True)
+
+        return Response(data = serializer.data , status = status.HTTP_200_OK)
 
 
-class UserDetailView(LoginRequiredMixin, DetailView):
+class FollowList(APIView):
 
-    model = User
-    slug_field = "username"
-    slug_url_kwarg = "username"
+    def get(self , request ,user_id, format=None):
 
+        all_follower = models.User.objects.get(id = user_id).followers.all().order_by('username')
 
-user_detail_view = UserDetailView.as_view()
+        serializer = serializers.FollowListSerializer(all_follower, many=True)
 
-
-class UserListView(LoginRequiredMixin, ListView):
-
-    model = User
-    slug_field = "username"
-    slug_url_kwarg = "username"
+        return Response(data = serializer.data , status = status.HTTP_200_OK)
 
 
-user_list_view = UserListView.as_view()
+class FollowingList(APIView):
+    
+    def get(self , request ,user_id, format=None):
 
+        all_following = models.User.objects.get(id = user_id).following.all().order_by('username')
 
-class UserUpdateView(LoginRequiredMixin, UpdateView):
+        serializer = serializers.FollowListSerializer(all_following, many=True)
 
-    model = User
-    fields = ["name"]
+        return Response(data = serializer.data , status = status.HTTP_200_OK)
 
-    def get_success_url(self):
-        return reverse("users:detail", kwargs={"username": self.request.user.username})
+class SmallProfile(APIView):
 
-    def get_object(self):
-        return User.objects.get(username=self.request.user.username)
+    def get(self , request , user_id , format=None):
 
+        try :
 
-user_update_view = UserUpdateView.as_view()
+            user = models.User.objects.get(id = user_id)
 
+            serializer = serializers.SmallProfileSerializer(user)
 
-class UserRedirectView(LoginRequiredMixin, RedirectView):
+            return Response(data = serializer.data , status = status.HTTP_200_OK)
 
-    permanent = False
+        except models.User.DoesNotExist :
 
-    def get_redirect_url(self):
-        return reverse("users:detail", kwargs={"username": self.request.user.username})
+            return Response(status = status.HTTP_404_NOT_FOUND)
 
+class Search(APIView):
 
-user_redirect_view = UserRedirectView.as_view()
+    def get(self , request , format=None):
+
+        user = request.query_params.get('username',None)
+
+        user_list = []
+
+        try :
+
+            search_username = models.User.objects.filter(Q(username__contains = user) | Q(name__contains = user)).distinct()[:3] 
+
+            for username in search_username :
+
+                user_list.append(username)
+
+            serializer = serializers.SearchProfileSerializer(user_list , many = True)
+
+            return Response(data = serializer.data , status = status.HTTP_200_OK)
+
+        except models.User.DoesNotExist : 
+
+            return Response(status = status.HTTP_404_NOT_FOUND)        

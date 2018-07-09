@@ -91,11 +91,11 @@ class Following(APIView):
             return Response(status = status.HTTP_404_NOT_FOUND)
   
 
-class SmallRecommandList(APIView):
+class RecommandList(APIView):
 
     def get(self , request , format=None):
 
-        recommandlist = models.User.objects.all().order_by('date_joined')[:3]
+        recommandlist = models.User.objects.all().order_by('date_joined')
 
         serializer = serializers.FollowListSerializer(recommandlist, many=True)
 

@@ -22,18 +22,7 @@ class TwitSerializer(serializers.ModelSerializer):
         )
 
 
-class SmallFollowListSerializer(serializers.ModelSerializer):
-
-    class Meta : 
-        model = models.User
-        fields = (
-            'profile_image',
-            'username',
-            'name',
-        )
-
-
-class AllFollowListSerializer(serializers.ModelSerializer):
+class FollowListSerializer(serializers.ModelSerializer):
 
     class Meta :
         model = models.User
@@ -57,4 +46,15 @@ class SmallProfileSerializer(serializers.ModelSerializer):
             'follower_count',
             'following_count',
             'tweet_count',
+        )
+
+
+class SearchProfileSerializer(serializers.ModelSerializer):
+
+    class Meta : 
+        model = models.User
+        fields = (
+            'profile_image',
+            'username',
+            'name'
         )

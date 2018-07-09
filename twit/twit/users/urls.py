@@ -1,16 +1,42 @@
 from django.urls import path
+from twit.users import views
 
-from twit.users.views import (
-    user_list_view,
-    user_redirect_view,
-    user_update_view,
-    user_detail_view,
-)
 
 app_name = "users"
 urlpatterns = [
-    path("", view=user_list_view, name="list"),
-    path("~redirect/", view=user_redirect_view, name="redirect"),
-    path("~update/", view=user_update_view, name="update"),
-    path("<str:username>/", view=user_detail_view, name="detail"),
+    path(
+        "<int:user_id>/follower",
+        view = views.Follower.as_view(),
+        name = 'user_follow'
+    ),
+    path(
+        "<int:user_id>/following",
+        view = views.Following.as_view(),
+        name = 'user_following'
+    ),
+    path(
+        "recommandlist",
+        view = views.SmallRecommandList.as_view(),
+        name = 'follow_recommand'
+    ),
+    path(
+        "<int:user_id>/followlist",
+        view = views.FollowList.as_view(),
+        name = 'user_follow_list'
+    ),
+    path(
+        "<int:user_id>/followinglist",
+        view = views.FollowingList.as_view(),
+        name = 'user_following_list'
+    ),
+    path(
+        "<int:user_id>/smallprofile",
+        view = views.SmallProfile.as_view(),
+        name = 'small_profile'
+    ),
+    path(
+        'search/',
+        view = views.Search.as_view(),
+        name = 'search'
+    )
 ]

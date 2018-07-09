@@ -15,9 +15,9 @@ urlpatterns = [
         name = 'user_following'
     ),
     path(
-        "recommandlist",
-        view = views.SmallRecommandList.as_view(),
-        name = 'follow_recommand'
+        'recommand',
+        view = views.RecommandList.as_view(),
+        name = 'all_follow_recommand'      
     ),
     path(
         "<int:user_id>/followlist",
@@ -38,5 +38,6 @@ urlpatterns = [
         'search/',
         view = views.Search.as_view(),
         name = 'search'
-    )
+    ),
+
 ]
